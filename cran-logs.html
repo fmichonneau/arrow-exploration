@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.0.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Creating an arrow dataset</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="cran-logs_files/libs/clipboard/clipboard.min.js"></script>
+<script src="cran-logs_files/libs/quarto-html/quarto.js"></script>
+<script src="cran-logs_files/libs/quarto-html/popper.min.js"></script>
+<script src="cran-logs_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="cran-logs_files/libs/quarto-html/anchor.min.js"></script>
+<link href="cran-logs_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="cran-logs_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="cran-logs_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="cran-logs_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="cran-logs_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Creating an arrow dataset</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+    
+  </div>
+  
+
+</header>
+
+<p>While getting started with Apache Arrow, I was intrigued by the variety of formats Arrow supports. Arrow tutorials tend to start with already prepared datasets ready to be ingested by <code>open_dataset()</code>. I wanted to explore what it takes to create your own dataset aimed to be analyzed with Arrow and understand the respective benefits of the different file formats it supports.</p>
+<p>Arrow can read in a variety of formats: <code>parquet</code>, <code>arrow</code> (also known as <code>ipc</code> and <code>feather</code>)<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>, and text-based formats like <code>csv</code> (as well as <code>tsv</code>). Additionally, Arrow provides tools to convert between these formats.</p>
+<p>Having the possibility to import datasets in a variety of formats is helpful as you are less constrained by the type of data you can start your analysis on. However, if you are building a dataset from scratch, which one should you choose?</p>
+<p>To try to answer this question, we will be using the <code>{arrow}</code> R package to compare the amount of hard drive space these file formats use and the performance of a query a multi-file dataset using these different formats. This is not a formal evaluation of the performance of Arrow or how best to optimize the partitioning of a dataset, rather it is a brief exploration of the tradeoffs that come with using the different datasets supported by Arrow.</p>
+<p>We will be using data from <a href="http://cran-logs.rstudio.com/" class="uri">http://cran-logs.rstudio.com/</a>. This site gives you access to the log files for all hits to the CRAN<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> mirror hosted by RStudio. For each day since October 1st, 2012, there is a compressed CSV file (file with the extension <code>.csv.gz</code>) that records the downloaded packages. Each rows contains the date, the time, the name of the R package downloaded, the R version used, the architecture (32 bit or 64 bit), the operating system, the country infered from the IP address, and a daily unique identifier assigned to each IP address. This website has also similar data for the daily downloads of R itself but I will not be using this data in this post.</p>
+<p>For this exploration, we are going to limit ourselves to a couple of months of data which will be providing enough data for our purpose. We will download the data for the period from June 1st, 2022 to August 15th, 2022.</p>
+<p>Arrow is designed to read data that is split across mulitple files. So, you can point <code>open_dataset()</code> to a directory that contains all the files that make up your dataset. There is no need to loop over each file to build your dataset in memory. Splitting your datasets across multiple files can even make queries on your dataset faster, as only some of the files might need to be accessed to get the results needed. Depending on the type of queries you perform most often on your dataset, it can be worth considering how best to partition your files to accelerate your analyses (but this is beyond the scope of this post). Here, the files are provided by date, and we will keep a time-based file organization.</p>
+<p>We will use a Hive-style partitioning by year and month. We will have a directory for each year (there is only one year in our example), and within it, a directory for each month. The directory are named according to the convention <code>&lt;variable_name&gt;=&lt;value&gt;</code>. So we will want to organize the files as illustrated below:</p>
+<pre><code>└── year=2022
+    ├── month=6
+    │   └── &lt;data files&gt;
+    ├── month=7
+    │   └── &lt;data files&gt;
+    └── month=8
+        └── &lt;data files&gt;</code></pre>
+<section id="import-the-data-as-it-is-provided" class="level2">
+<h2 class="anchored" data-anchor-id="import-the-data-as-it-is-provided">Import the data as it is provided</h2>
+<div class="cell">
+<details>
+<summary>Load packages needed</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(arrow)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(fs)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(bench)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>The <code>open_dataset()</code> function in the <code>{arrow}</code> package can directly read compressed CSV files<a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> (with the extension <code>.csv.gz</code>) as they are provided on the RStudio CRAN logs website.</p>
+<p>As a first step, we can download the files from the site and organize them using the Hive-style directory structure as shown above.</p>
+<div class="cell">
+<details>
+<summary>Show the functions used to download the data from the RStudio CRAN log site</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Check that the date is really a date,</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="do">## and extract the year and month from it</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>parse_date <span class="ot">&lt;-</span> <span class="cf">function</span>(date) {</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stopifnot</span>(</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"`date` must be a date"</span> <span class="ot">=</span> <span class="fu">inherits</span>(date, <span class="st">"Date"</span>),</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"provide only one date"</span> <span class="ot">=</span> <span class="fu">identical</span>(<span class="fu">length</span>(date), 1L),</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"date must be in the past"</span> <span class="ot">=</span> date <span class="sc">&lt;</span> <span class="fu">Sys.Date</span>()</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">date_chr =</span> <span class="fu">as.character</span>(date),</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">year =</span> <span class="fu">as.POSIXlt</span>(date)<span class="sc">$</span>year <span class="sc">+</span> 1900L, </span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">month =</span> <span class="fu">as.POSIXlt</span>(date)<span class="sc">$</span>mon <span class="sc">+</span> 1L</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="do">## Download the data set for a given date from the RStudio CRAN log website.</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="do">## `date` is a single date for which we want the data</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="do">## `path` is where we want the data to live</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>download_daily_package_logs_csv <span class="ot">&lt;-</span> <span class="cf">function</span>(date,</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>                                            <span class="at">path =</span> <span class="st">"~/datasets/cran-logs-csv"</span>) {</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>  <span class="do">## build the URL for the download</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>  date <span class="ot">&lt;-</span> <span class="fu">parse_date</span>(date)</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>  url <span class="ot">&lt;-</span> <span class="fu">paste0</span>(</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    <span class="st">'http://cran-logs.rstudio.com/'</span>, date<span class="sc">$</span>year, <span class="st">'/'</span>, date<span class="sc">$</span>date_chr, <span class="st">'.csv.gz'</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>  <span class="do">## build the path for the destination of the download</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>  file <span class="ot">&lt;-</span> <span class="fu">file.path</span>(</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>    path,</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    <span class="fu">paste0</span>(<span class="st">"year="</span>, date<span class="sc">$</span>year),</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>    <span class="fu">paste0</span>(<span class="st">"month="</span>, date<span class="sc">$</span>month),</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>    <span class="fu">paste0</span>(date<span class="sc">$</span>date_chr, <span class="st">".csv.gz"</span>)</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>  <span class="do">## create the folder if it doesn't exist</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">dir.exists</span>(<span class="fu">dirname</span>(file))) {</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>    <span class="fu">dir.create</span>(<span class="fu">dirname</span>(file), <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>  <span class="do">## download the file</span></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>  <span class="fu">message</span>(<span class="st">"Downloading data for "</span>, date<span class="sc">$</span>date_chr, <span class="st">" ... "</span>, <span class="at">appendLF =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>  <span class="fu">download.file</span>(</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>    <span class="at">url =</span> url,</span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>    <span class="at">destfile =</span> file,</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>    <span class="at">method =</span> <span class="st">"libcurl"</span>,</span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>    <span class="at">quiet =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>    <span class="at">mode =</span> <span class="st">"wb"</span></span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>  <span class="fu">message</span>(<span class="st">"done."</span>)</span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>  <span class="do">## quick check to make sure that the file was created</span></span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(file)) {</span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Download failed for "</span>, date<span class="sc">$</span>date_chr, <span class="at">call. =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>  <span class="do">## return the path</span></span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>  file</span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="do">## build sequence of dates for which we want the data</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>dates_to_get <span class="ot">&lt;-</span> <span class="fu">seq</span>(</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.Date</span>(<span class="st">"2022-06-01"</span>),</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.Date</span>(<span class="st">"2022-08-15"</span>),</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">by =</span> <span class="st">"day"</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="do">## download the data</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="fu">walk</span>(dates_to_get, download_daily_package_logs_csv)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Let’s check the content of the folder that holds the data we downloaded:</p>
+<pre><code>~/datasets/cran-logs-csv/
+└── year=2022
+    ├── month=6
+    │   ├── 2022-06-01.csv.gz
+    │   ├── 2022-06-02.csv.gz
+    │   ├── 2022-06-03.csv.gz
+    │   ├── ...
+    │   └── 2022-06-30.csv.gz
+    ├── month=7
+    │   ├── 2022-07-01.csv.gz
+    │   ├── 2022-07-02.csv.gz
+    │   ├── 2022-07-03.csv.gz
+    │   ├── ...
+    │   └── 2022-07-31.csv.gz
+    └── month=8
+        ├── 2022-08-01.csv.gz
+        ├── 2022-08-02.csv.gz
+        ├── 2022-08-03.csv.gz
+        ├── ...
+        └── 2022-08-15.csv.gz</code></pre>
+<p>We have one file for each day, placed in a folder corresponding to their month. We can now read this data using <code>{arrow}</code>’s <code>open_dataset()</code> function:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>cran_logs_csv <span class="ot">&lt;-</span> <span class="fu">open_dataset</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"~/datasets/cran-logs-csv/"</span>,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">format =</span> <span class="st">"csv"</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">partitioning =</span> <span class="fu">c</span>(<span class="st">"year"</span>, <span class="st">"month"</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>cran_logs_csv</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>FileSystemDataset with 76 csv files
+date: date32[day]
+time: time32[s]
+size: int64
+r_version: string
+r_arch: string
+r_os: string
+package: string
+version: string
+country: string
+ip_id: int64
+year: int32
+month: int32</code></pre>
+</div>
+</div>
+<p>The partitioning has been taken into consideration as the output shows that the dataset contains the variables <code>year</code> and <code>month</code> which are not part of the data we downloaded. They are coming from the way we organized the downloaded files.</p>
+</section>
+<section id="convert-to-arrow-and-parquet-files" class="level2">
+<h2 class="anchored" data-anchor-id="convert-to-arrow-and-parquet-files">Convert to Arrow and Parquet files</h2>
+<p>Now that we have the compressed CSV files on disk, and that we opened the dataset with <code>open_dataset()</code>, we can convert it to the other file formats supported by Arrow using <code>{arrow}</code>’s <code>write_dataset()</code> function. We are going to to convert our collection of <code>.csv.gz</code> files into the Arrow and Parquet formats.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Convert the dataset into the Arrow format</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">write_dataset</span>(</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  cran_logs_csv,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">path =</span> <span class="st">"~/datasets/cran-logs-arrow"</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">format =</span> <span class="st">"arrow"</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">partitioning =</span> <span class="fu">c</span>(<span class="st">"year"</span>, <span class="st">"month"</span>)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="do">## Convert the dataset into the Parquet format</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="fu">write_dataset</span>(</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  cran_logs_csv,</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">path =</span> <span class="st">"~/datasets/cran-logs-parquet"</span>,</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">format =</span> <span class="st">"parquet"</span>,</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">partitioning =</span> <span class="fu">c</span>(<span class="st">"year"</span>, <span class="st">"month"</span>)</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Let’s inspect the content of the directories that contain these datasets.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>fs<span class="sc">::</span><span class="fu">dir_tree</span>(<span class="st">"~/datasets/cran-logs-arrow/"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>~/datasets/cran-logs-arrow/
+└── year=2022
+    ├── month=6
+    │   └── part-0.arrow
+    ├── month=7
+    │   └── part-0.arrow
+    └── month=8
+        └── part-0.arrow</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>fs<span class="sc">::</span><span class="fu">dir_tree</span>(<span class="st">"~/datasets/cran-logs-parquet/"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>~/datasets/cran-logs-parquet/
+└── year=2022
+    ├── month=6
+    │   └── part-0.parquet
+    ├── month=7
+    │   └── part-0.parquet
+    └── month=8
+        └── part-0.parquet</code></pre>
+</div>
+</div>
+<p>These two directories have the same layout organized by year and month as with our CSV files given that we kept the same partitioning. The files within the directories have the extension that matches their file format. One difference is that there is a single file for each month. We used the default values for <code>write_dataset()</code> and the number of rows for each month is smaller than the threshold this function uses to split the dataset into multiple files.</p>
+</section>
+<section id="comparison-of-the-different-formats" class="level2">
+<h2 class="anchored" data-anchor-id="comparison-of-the-different-formats">Comparison of the different formats</h2>
+<p>Let’s compare how much space these different file formats take on disk:</p>
+<div class="cell" data-hash="cran-logs_cache/html/dataset-size_bc7b34a9302469f2408f318d63750e2e">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>dataset_size <span class="ot">&lt;-</span> <span class="cf">function</span>(path) {</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  fs<span class="sc">::</span><span class="fu">dir_info</span>(path, <span class="at">recurse =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(type <span class="sc">==</span> <span class="st">"file"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pull</span>(size) <span class="sc">%&gt;%</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sum</span>()</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="fu">tribble</span>(</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span> Format, <span class="sc">~</span> size,</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Compressed CSV"</span>, <span class="fu">dataset_size</span>(<span class="st">"~/datasets/cran-logs-csv/"</span>),</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Arrow"</span>, <span class="fu">dataset_size</span>(<span class="st">"~/datasets/cran-logs-arrow/"</span>),</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Parquet"</span>, <span class="fu">dataset_size</span>(<span class="st">"~/datasets/cran-logs-parquet/"</span>)</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="kable-table">
+<table class="table table-sm table-striped">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Format</th>
+<th style="text-align: right;">size</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Compressed CSV</td>
+<td style="text-align: right;">5.01G</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Arrow</td>
+<td style="text-align: right;">29.67G</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Parquet</td>
+<td style="text-align: right;">5.06G</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<p>The Arrow format takes the most space with almost 30GB while both the compressed CSV and the Parquet files use about 5GB of hard drive.</p>
+<p>We are now set up to compare the performance of doing computation of these different dataset formats.</p>
+<p>Let’s open these datasets with the different formats:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>cran_logs_csv <span class="ot">&lt;-</span> <span class="fu">open_dataset</span>(<span class="st">"~/datasets/cran-logs-csv/"</span>, <span class="at">format =</span> <span class="st">"csv"</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>cran_logs_arrow <span class="ot">&lt;-</span> <span class="fu">open_dataset</span>(<span class="st">"~/datasets/cran-logs-arrow/"</span>, <span class="at">format =</span> <span class="st">"arrow"</span>)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>cran_logs_parquet <span class="ot">&lt;-</span> <span class="fu">open_dataset</span>(<span class="st">"~/datasets/cran-logs-parquet/"</span>,  <span class="at">format =</span> <span class="st">"parquet"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We will compare how long it takes for Arrow to compute the 10 most downloaded packages in the time period our dataset covers using each file format.</p>
+<div class="cell" data-hash="cran-logs_cache/html/compare-perf-top-10-pkgs_71a065a7a67c512fef2abf27511c0645">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>top_10_packages <span class="ot">&lt;-</span> <span class="cf">function</span>(data) {</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  data <span class="sc">%&gt;%</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">count</span>(package, <span class="at">sort =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">head</span>(<span class="dv">10</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">n_million_downloads =</span> n<span class="sc">/</span><span class="fl">1e6</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>( <span class="sc">-</span> n) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">collect</span>()</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>bench<span class="sc">::</span><span class="fu">mark</span>(</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">top_10_packages</span>(cran_logs_csv),</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">top_10_packages</span>(cran_logs_arrow),</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">top_10_packages</span>(cran_logs_parquet)</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: Some expressions had a GC in every iteration; so filtering is disabled.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 6
+  expression                              min   median `itr/sec` mem_a…¹ gc/se…²
+  &lt;bch:expr&gt;                         &lt;bch:tm&gt; &lt;bch:tm&gt;     &lt;dbl&gt; &lt;bch:b&gt;   &lt;dbl&gt;
+1 top_10_packages(cran_logs_csv)       32.02s   32.02s    0.0312   8.2MB   0    
+2 top_10_packages(cran_logs_arrow)      4.03s    4.03s    0.248  165.4KB   0    
+3 top_10_packages(cran_logs_parquet)    3.97s    3.97s    0.252  137.1KB   0.252
+# … with abbreviated variable names ¹​mem_alloc, ²​`gc/sec`</code></pre>
+</div>
+</div>
+<p>While it takes about 4 seconds to perform this task on the Arrow or Parquet files, it takes more than 35 seconds to do it on the CSV files.</p>
+</section>
+<section id="conclusion" class="level2">
+<h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
+<p>Having Arrow point directly to the folder of compressed CSV file might be the most convenient but it comes with a high performance cost. Arrow and Parquet have similar performance but the Parquet files take less space on disk and would be more suitable for long-term storage.</p>
+</section>
+<section id="session-info" class="level2">
+<h2 class="anchored" data-anchor-id="session-info">Session Info</h2>
+<div class="callout-tip callout callout-style-default callout-captioned">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-caption-container flex-fill">
+Expand for Session Info
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>sessioninfo<span class="sc">::</span><span class="fu">session_info</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>─ Session info ───────────────────────────────────────────────────────────────
+ setting  value
+ version  R version 4.2.1 (2022-06-23)
+ os       Ubuntu 22.04.1 LTS
+ system   x86_64, linux-gnu
+ ui       X11
+ language en_US
+ collate  en_US.UTF-8
+ ctype    en_US.UTF-8
+ tz       Europe/Paris
+ date     2022-08-18
+ pandoc   NA (via rmarkdown)
+
+─ Packages ───────────────────────────────────────────────────────────────────
+ package       * version date (UTC) lib source
+ arrow         * 9.0.0   2022-08-10 [1] CRAN (R 4.2.1)
+ assertthat      0.2.1   2019-03-21 [1] RSPM
+ backports       1.4.1   2021-12-13 [1] RSPM
+ bench         * 1.1.2   2021-11-30 [1] RSPM
+ bit             4.0.4   2020-08-04 [1] RSPM
+ bit64           4.0.5   2020-08-30 [1] RSPM
+ broom           1.0.0   2022-07-01 [1] RSPM
+ cellranger      1.1.0   2016-07-27 [1] RSPM
+ cli             3.3.0   2022-04-25 [1] RSPM (R 4.2.0)
+ colorspace      2.0-3   2022-02-21 [1] RSPM
+ crayon          1.5.1   2022-03-26 [1] RSPM
+ DBI             1.1.3   2022-06-18 [1] RSPM
+ dbplyr          2.2.1   2022-06-27 [1] RSPM
+ digest          0.6.29  2021-12-01 [1] RSPM
+ dplyr         * 1.0.9   2022-04-28 [1] RSPM
+ ellipsis        0.3.2   2021-04-29 [1] RSPM
+ evaluate        0.15    2022-02-18 [1] RSPM
+ fansi           1.0.3   2022-03-24 [1] RSPM
+ fastmap         1.1.0   2021-01-25 [1] RSPM
+ forcats       * 0.5.1   2021-01-27 [1] RSPM
+ fs            * 1.5.2   2021-12-08 [1] RSPM
+ gargle          1.2.0   2021-07-02 [1] RSPM
+ generics        0.1.3   2022-07-05 [1] RSPM
+ ggplot2       * 3.3.6   2022-05-03 [1] RSPM
+ glue            1.6.2   2022-02-24 [1] RSPM (R 4.2.0)
+ googledrive     2.0.0   2021-07-08 [1] RSPM
+ googlesheets4   1.0.0   2021-07-21 [1] RSPM
+ gtable          0.3.0   2019-03-25 [1] RSPM
+ haven           2.5.0   2022-04-15 [1] RSPM
+ hms             1.1.1   2021-09-26 [1] RSPM
+ htmltools       0.5.3   2022-07-18 [1] RSPM
+ httr            1.4.3   2022-05-04 [1] RSPM
+ jsonlite        1.8.0   2022-02-22 [1] RSPM
+ knitr           1.39    2022-04-26 [1] RSPM
+ lifecycle       1.0.1   2021-09-24 [1] RSPM
+ lubridate       1.8.0   2021-10-07 [1] RSPM
+ magrittr        2.0.3   2022-03-30 [1] RSPM
+ modelr          0.1.8   2020-05-19 [1] RSPM
+ munsell         0.5.0   2018-06-12 [1] RSPM
+ pillar          1.8.0   2022-07-18 [1] RSPM
+ pkgconfig       2.0.3   2019-09-22 [1] RSPM
+ purrr         * 0.3.4   2020-04-17 [1] RSPM
+ R6              2.5.1   2021-08-19 [1] RSPM
+ readr         * 2.1.2   2022-01-30 [1] RSPM
+ readxl          1.4.0   2022-03-28 [1] RSPM
+ reprex          2.0.1   2021-08-05 [1] RSPM
+ rlang           1.0.4   2022-07-12 [1] RSPM (R 4.2.0)
+ rmarkdown       2.14    2022-04-25 [1] RSPM
+ rvest           1.0.2   2021-10-16 [1] RSPM
+ scales          1.2.0   2022-04-13 [1] RSPM
+ sessioninfo     1.2.2   2021-12-06 [1] RSPM
+ stringi         1.7.8   2022-07-11 [1] RSPM
+ stringr       * 1.4.0   2019-02-10 [1] RSPM
+ tibble        * 3.1.8   2022-07-22 [1] RSPM
+ tidyr         * 1.2.0   2022-02-01 [1] RSPM
+ tidyselect      1.1.2   2022-02-21 [1] RSPM
+ tidyverse     * 1.3.2   2022-07-18 [1] RSPM
+ tzdb            0.3.0   2022-03-28 [1] RSPM
+ utf8            1.2.2   2021-07-24 [1] RSPM
+ vctrs           0.4.1   2022-04-13 [1] RSPM
+ withr           2.5.0   2022-03-03 [1] RSPM
+ xfun            0.31    2022-05-10 [1] RSPM
+ xml2            1.3.3   2021-11-30 [1] RSPM
+ yaml            2.3.5   2022-02-21 [1] RSPM
+
+ [1] /home/francois/.R-library
+ [2] /usr/lib/R/library
+
+──────────────────────────────────────────────────────────────────────────────</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+
+<div id="quarto-appendix" class="default"><section class="footnotes footnotes-end-of-document" role="doc-endnotes"><h2 class="anchored quarto-appendix-heading">Footnotes</h2>
+
+<ol>
+<li id="fn1" role="doc-endnote"><p>Feather was the first iteration of the file format (v1), the Arrow Interprocess Communication (IPC) file format is the newer version (v2) and has many new features.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2" role="doc-endnote"><p>Comprehensive R Archive Network, the repository for the R packages<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3" role="doc-endnote"><p>since Arrow 9.0.0<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section></div></main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    setTimeout(function() {
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      let href = ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const cites = ref.parentNode.getAttribute('data-cites').split(' ');
+    tippyHover(ref, function() {
+      var popup = window.document.createElement('div');
+      cites.forEach(function(cite) {
+        var citeDiv = window.document.createElement('div');
+        citeDiv.classList.add('hanging-indent');
+        citeDiv.classList.add('csl-entry');
+        var biblioDiv = window.document.getElementById('ref-' + cite);
+        if (biblioDiv) {
+          citeDiv.innerHTML = biblioDiv.innerHTML;
+        }
+        popup.appendChild(citeDiv);
+      });
+      return popup.innerHTML;
+    });
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
