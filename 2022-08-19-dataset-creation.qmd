@@ -1,17 +1,25 @@
 ---
-title: "Creating an arrow dataset"
+title: "Creating an Arrow dataset"
+subtitle: "A brief exploration of the data formats you can use with Arrow"
+author: "[François Michonneau](https://twitter.com/fmic_)"
+date: 2022-08-19
 format:
   html:
     code-fold: false
     footnotes-hover: true
     df-print: kable
+    toc: true
+  gfm:
+    reference-location: document
 ---
+
+## Background
 
 While getting started with Apache Arrow, I was intrigued by the variety of
 formats Arrow supports. Arrow tutorials tend to start with already prepared
 datasets ready to be ingested by `open_dataset()`. I wanted to explore what it
-takes to create your own dataset aimed to be analyzed with Arrow and understand
-the respective benefits of the different file formats it supports.
+takes to create your dataset aimed to be analyzed with Arrow and understand the
+respective benefits of the different file formats it supports.
 
 Arrow can read in a variety of formats: `parquet`, `arrow` (also known as `ipc`
 and `feather`)^[Feather was the first iteration of the file format (v1), the
@@ -24,29 +32,32 @@ you are less constrained by the type of data you can start your analysis on.
 However, if you are building a dataset from scratch, which one should you
 choose?
 
+## The dataset
+
 To try to answer this question, we will be using the `{arrow}` R package to
 compare the amount of hard drive space these file formats use and the
-performance of a query a multi-file dataset using these different formats. This
-is not a formal evaluation of the performance of Arrow or how best to optimize
-the partitioning of a dataset, rather it is a brief exploration of the tradeoffs
-that come with using the different datasets supported by Arrow.
+performance of a query in a multi-file dataset using these different formats.
+This is not a formal evaluation of the performance of Arrow or how best to
+optimize the partitioning of a dataset, rather it is a brief exploration of the
+tradeoffs that come with using the different datasets supported by Arrow. I also
+don't explain the differences in the data structure of these different formats.
 
 We will be using data from <http://cran-logs.rstudio.com/>. This site gives you
 access to the log files for all hits to the CRAN^[Comprehensive R Archive
 Network, the repository for the R packages] mirror hosted by RStudio. For each
 day since October 1st, 2012, there is a compressed CSV file (file with the
-extension `.csv.gz`) that records the downloaded packages. Each rows contains
-the date, the time, the name of the R package downloaded, the R version used,
-the architecture (32 bit or 64 bit), the operating system, the country infered
-from the IP address, and a daily unique identifier assigned to each IP address.
-This website has also similar data for the daily downloads of R itself but I
-will not be using this data in this post.
+extension `.csv.gz`) that records the downloaded packages. Each row contains the
+date, the time, the name of the R package downloaded, the R version used, the
+architecture (32-bit or 64-bit), the operating system, the country inferred from
+the IP address, and a daily unique identifier assigned to each IP address. This
+website has also similar data for the daily downloads of R itself but I will not
+be using this data in this post.
 
 For this exploration, we are going to limit ourselves to a couple of months of
 data which will be providing enough data for our purpose. We will download the
 data for the period from June 1st, 2022 to August 15th, 2022.
 
-Arrow is designed to read data that is split across mulitple files. So, you can
+Arrow is designed to read data that is split across multiple files. So, you can
 point `open_dataset()` to a directory that contains all the files that make up
 your dataset. There is no need to loop over each file to build your dataset in
 memory. Splitting your datasets across multiple files can even make queries on
@@ -56,11 +67,11 @@ your dataset, it can be worth considering how best to partition your files to
 accelerate your analyses (but this is beyond the scope of this post). Here, the
 files are provided by date, and we will keep a time-based file organization.
 
-We will use a Hive-style partitioning by year and month. We will have a
-directory for each year (there is only one year in our example), and within it,
-a directory for each month. The directory are named according to the convention
-`<variable_name>=<value>`. So we will want to organize the files as illustrated
-below:
+We will use a [Hive-style](https://hive.apache.org/) partitioning by year and
+month. We will have a directory for each year (there is only one year in our
+example), and within it, a directory for each month. The directory are named
+according to the convention `<variable_name>=<value>`. So we will want to
+organize the files as illustrated below:
 
 ```
 └── year=2022
@@ -219,7 +230,7 @@ we downloaded. They are coming from the way we organized the downloaded files.
 Now that we have the compressed CSV files on disk, and that we opened the
 dataset with `open_dataset()`, we can convert it to the other file formats
 supported by Arrow using `{arrow}`'s `write_dataset()` function. We are going to
-to convert our collection of `.csv.gz` files into the Arrow and Parquet formats.
+convert our collection of `.csv.gz` files into the Arrow and Parquet formats.
 
 ```{r convert-dataset}
 #| eval: false
@@ -250,7 +261,7 @@ fs::dir_tree("~/datasets/cran-logs-parquet/")
 
 These two directories have the same layout organized by year and month as with
 our CSV files given that we kept the same partitioning. The files within the
-directories have the extension that matches their file format. One difference is
+directories have an extension that matches their file format. One difference is
 that there is a single file for each month. We used the default values for
 `write_dataset()` and the number of rows for each month is smaller than the
 threshold this function uses to split the dataset into multiple files.
@@ -312,21 +323,34 @@ bench::mark(
 ```
 
 While it takes about 4 seconds to perform this task on the Arrow or Parquet
-files, it takes more than 35 seconds to do it on the CSV files.
+files, it takes more than 30 seconds to do it on the CSV files.
 
 ## Conclusion
 
 Having Arrow point directly to the folder of compressed CSV file might be the
-most convenient but it comes with a high performance cost. Arrow and Parquet
+most convenient but it comes with a high-performance cost. Arrow and Parquet
 have similar performance but the Parquet files take less space on disk and would
-be more suitable for long-term storage.
+be more suitable for long-term storage. This is why large datasets like the NYC
+taxi data is distributed as a series of Parquet files.
+
+In the future, I might explore how using different variables for partitioning or
+how the number of files in the partitions affects the performance of the
+queries.
+
+## Going further
+
+If you would like to learn more about the different formats, check out the
+[Arrow workshop](https://arrow-user2022.netlify.app/) (especially [Part 3: Data
+Storage](https://arrow-user2022.netlify.app/data-storage.html)) that Danielle
+Navarro, Jonathan Keane, and Stephanie Hazlitt taught at useR!2022.
+
+## Acknowledgments
+
+Thank you to [Kae Suarez](https://twitter.com/kae_suarez/) for reviewing this post.
 
 
-## Session Info
-
-:::{.callout-tip collapse="true"}
-## Expand for Session Info
+<details><summary>Expand for Session Info</summary>
 ```{r session-info}
 sessioninfo::session_info()
 ```
-:::
+</details>

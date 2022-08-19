@@ -6,8 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="François Michonneau">
+<meta name="dcterms.date" content="2022-08-19">
 
-<title>Creating an arrow dataset</title>
+<title>Creating an Arrow dataset</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -81,50 +83,83 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </style>
 
 
-<script src="cran-logs_files/libs/clipboard/clipboard.min.js"></script>
-<script src="cran-logs_files/libs/quarto-html/quarto.js"></script>
-<script src="cran-logs_files/libs/quarto-html/popper.min.js"></script>
-<script src="cran-logs_files/libs/quarto-html/tippy.umd.min.js"></script>
-<script src="cran-logs_files/libs/quarto-html/anchor.min.js"></script>
-<link href="cran-logs_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="cran-logs_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="cran-logs_files/libs/bootstrap/bootstrap.min.js"></script>
-<link href="cran-logs_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="cran-logs_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="2022-08-19-dataset-creation_files/libs/clipboard/clipboard.min.js"></script>
+<script src="2022-08-19-dataset-creation_files/libs/quarto-html/quarto.js"></script>
+<script src="2022-08-19-dataset-creation_files/libs/quarto-html/popper.min.js"></script>
+<script src="2022-08-19-dataset-creation_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="2022-08-19-dataset-creation_files/libs/quarto-html/anchor.min.js"></script>
+<link href="2022-08-19-dataset-creation_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="2022-08-19-dataset-creation_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="2022-08-19-dataset-creation_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="2022-08-19-dataset-creation_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="2022-08-19-dataset-creation_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
 
 
 </head>
 
-<body class="fullcontent">
+<body>
 
 <div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
-
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#background" id="toc-background" class="nav-link active" data-scroll-target="#background">Background</a></li>
+  <li><a href="#the-dataset" id="toc-the-dataset" class="nav-link" data-scroll-target="#the-dataset">The dataset</a></li>
+  <li><a href="#import-the-data-as-it-is-provided" id="toc-import-the-data-as-it-is-provided" class="nav-link" data-scroll-target="#import-the-data-as-it-is-provided">Import the data as it is provided</a></li>
+  <li><a href="#convert-to-arrow-and-parquet-files" id="toc-convert-to-arrow-and-parquet-files" class="nav-link" data-scroll-target="#convert-to-arrow-and-parquet-files">Convert to Arrow and Parquet files</a></li>
+  <li><a href="#comparison-of-the-different-formats" id="toc-comparison-of-the-different-formats" class="nav-link" data-scroll-target="#comparison-of-the-different-formats">Comparison of the different formats</a></li>
+  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion">Conclusion</a></li>
+  <li><a href="#going-further" id="toc-going-further" class="nav-link" data-scroll-target="#going-further">Going further</a></li>
+  <li><a href="#acknowledgments" id="toc-acknowledgments" class="nav-link" data-scroll-target="#acknowledgments">Acknowledgments</a></li>
+  </ul>
+</nav>
+</div>
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Creating an arrow dataset</h1>
+<h1 class="title">Creating an Arrow dataset</h1>
+<p class="subtitle lead">A brief exploration of the data formats you can use with Arrow</p>
 </div>
 
 
 
 <div class="quarto-title-meta">
 
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p><a href="https://twitter.com/fmic_">François Michonneau</a> </p>
+          </div>
+  </div>
     
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">August 19, 2022</p>
+    </div>
+  </div>
     
   </div>
   
 
 </header>
 
-<p>While getting started with Apache Arrow, I was intrigued by the variety of formats Arrow supports. Arrow tutorials tend to start with already prepared datasets ready to be ingested by <code>open_dataset()</code>. I wanted to explore what it takes to create your own dataset aimed to be analyzed with Arrow and understand the respective benefits of the different file formats it supports.</p>
+<section id="background" class="level2">
+<h2 class="anchored" data-anchor-id="background">Background</h2>
+<p>While getting started with Apache Arrow, I was intrigued by the variety of formats Arrow supports. Arrow tutorials tend to start with already prepared datasets ready to be ingested by <code>open_dataset()</code>. I wanted to explore what it takes to create your dataset aimed to be analyzed with Arrow and understand the respective benefits of the different file formats it supports.</p>
 <p>Arrow can read in a variety of formats: <code>parquet</code>, <code>arrow</code> (also known as <code>ipc</code> and <code>feather</code>)<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>, and text-based formats like <code>csv</code> (as well as <code>tsv</code>). Additionally, Arrow provides tools to convert between these formats.</p>
 <p>Having the possibility to import datasets in a variety of formats is helpful as you are less constrained by the type of data you can start your analysis on. However, if you are building a dataset from scratch, which one should you choose?</p>
-<p>To try to answer this question, we will be using the <code>{arrow}</code> R package to compare the amount of hard drive space these file formats use and the performance of a query a multi-file dataset using these different formats. This is not a formal evaluation of the performance of Arrow or how best to optimize the partitioning of a dataset, rather it is a brief exploration of the tradeoffs that come with using the different datasets supported by Arrow.</p>
-<p>We will be using data from <a href="http://cran-logs.rstudio.com/" class="uri">http://cran-logs.rstudio.com/</a>. This site gives you access to the log files for all hits to the CRAN<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> mirror hosted by RStudio. For each day since October 1st, 2012, there is a compressed CSV file (file with the extension <code>.csv.gz</code>) that records the downloaded packages. Each rows contains the date, the time, the name of the R package downloaded, the R version used, the architecture (32 bit or 64 bit), the operating system, the country infered from the IP address, and a daily unique identifier assigned to each IP address. This website has also similar data for the daily downloads of R itself but I will not be using this data in this post.</p>
+</section>
+<section id="the-dataset" class="level2">
+<h2 class="anchored" data-anchor-id="the-dataset">The dataset</h2>
+<p>To try to answer this question, we will be using the <code>{arrow}</code> R package to compare the amount of hard drive space these file formats use and the performance of a query in a multi-file dataset using these different formats. This is not a formal evaluation of the performance of Arrow or how best to optimize the partitioning of a dataset, rather it is a brief exploration of the tradeoffs that come with using the different datasets supported by Arrow. I also don’t explain the differences in the data structure of these different formats.</p>
+<p>We will be using data from <a href="http://cran-logs.rstudio.com/" class="uri">http://cran-logs.rstudio.com/</a>. This site gives you access to the log files for all hits to the CRAN<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> mirror hosted by RStudio. For each day since October 1st, 2012, there is a compressed CSV file (file with the extension <code>.csv.gz</code>) that records the downloaded packages. Each row contains the date, the time, the name of the R package downloaded, the R version used, the architecture (32-bit or 64-bit), the operating system, the country inferred from the IP address, and a daily unique identifier assigned to each IP address. This website has also similar data for the daily downloads of R itself but I will not be using this data in this post.</p>
 <p>For this exploration, we are going to limit ourselves to a couple of months of data which will be providing enough data for our purpose. We will download the data for the period from June 1st, 2022 to August 15th, 2022.</p>
-<p>Arrow is designed to read data that is split across mulitple files. So, you can point <code>open_dataset()</code> to a directory that contains all the files that make up your dataset. There is no need to loop over each file to build your dataset in memory. Splitting your datasets across multiple files can even make queries on your dataset faster, as only some of the files might need to be accessed to get the results needed. Depending on the type of queries you perform most often on your dataset, it can be worth considering how best to partition your files to accelerate your analyses (but this is beyond the scope of this post). Here, the files are provided by date, and we will keep a time-based file organization.</p>
-<p>We will use a Hive-style partitioning by year and month. We will have a directory for each year (there is only one year in our example), and within it, a directory for each month. The directory are named according to the convention <code>&lt;variable_name&gt;=&lt;value&gt;</code>. So we will want to organize the files as illustrated below:</p>
+<p>Arrow is designed to read data that is split across multiple files. So, you can point <code>open_dataset()</code> to a directory that contains all the files that make up your dataset. There is no need to loop over each file to build your dataset in memory. Splitting your datasets across multiple files can even make queries on your dataset faster, as only some of the files might need to be accessed to get the results needed. Depending on the type of queries you perform most often on your dataset, it can be worth considering how best to partition your files to accelerate your analyses (but this is beyond the scope of this post). Here, the files are provided by date, and we will keep a time-based file organization.</p>
+<p>We will use a <a href="https://hive.apache.org/">Hive-style</a> partitioning by year and month. We will have a directory for each year (there is only one year in our example), and within it, a directory for each month. The directory are named according to the convention <code>&lt;variable_name&gt;=&lt;value&gt;</code>. So we will want to organize the files as illustrated below:</p>
 <pre><code>└── year=2022
     ├── month=6
     │   └── &lt;data files&gt;
@@ -132,6 +167,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     │   └── &lt;data files&gt;
     └── month=8
         └── &lt;data files&gt;</code></pre>
+</section>
 <section id="import-the-data-as-it-is-provided" class="level2">
 <h2 class="anchored" data-anchor-id="import-the-data-as-it-is-provided">Import the data as it is provided</h2>
 <div class="cell">
@@ -269,7 +305,7 @@ month: int32</code></pre>
 </section>
 <section id="convert-to-arrow-and-parquet-files" class="level2">
 <h2 class="anchored" data-anchor-id="convert-to-arrow-and-parquet-files">Convert to Arrow and Parquet files</h2>
-<p>Now that we have the compressed CSV files on disk, and that we opened the dataset with <code>open_dataset()</code>, we can convert it to the other file formats supported by Arrow using <code>{arrow}</code>’s <code>write_dataset()</code> function. We are going to to convert our collection of <code>.csv.gz</code> files into the Arrow and Parquet formats.</p>
+<p>Now that we have the compressed CSV files on disk, and that we opened the dataset with <code>open_dataset()</code>, we can convert it to the other file formats supported by Arrow using <code>{arrow}</code>’s <code>write_dataset()</code> function. We are going to convert our collection of <code>.csv.gz</code> files into the Arrow and Parquet formats.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Convert the dataset into the Arrow format</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">write_dataset</span>(</span>
@@ -312,12 +348,12 @@ month: int32</code></pre>
         └── part-0.parquet</code></pre>
 </div>
 </div>
-<p>These two directories have the same layout organized by year and month as with our CSV files given that we kept the same partitioning. The files within the directories have the extension that matches their file format. One difference is that there is a single file for each month. We used the default values for <code>write_dataset()</code> and the number of rows for each month is smaller than the threshold this function uses to split the dataset into multiple files.</p>
+<p>These two directories have the same layout organized by year and month as with our CSV files given that we kept the same partitioning. The files within the directories have an extension that matches their file format. One difference is that there is a single file for each month. We used the default values for <code>write_dataset()</code> and the number of rows for each month is smaller than the threshold this function uses to split the dataset into multiple files.</p>
 </section>
 <section id="comparison-of-the-different-formats" class="level2">
 <h2 class="anchored" data-anchor-id="comparison-of-the-different-formats">Comparison of the different formats</h2>
 <p>Let’s compare how much space these different file formats take on disk:</p>
-<div class="cell" data-hash="cran-logs_cache/html/dataset-size_bc7b34a9302469f2408f318d63750e2e">
+<div class="cell" data-hash="2022-08-19-dataset-creation_cache/html/dataset-size_9cf237f8427bd25cb1348eff3d55efc3">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>dataset_size <span class="ot">&lt;-</span> <span class="cf">function</span>(path) {</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  fs<span class="sc">::</span><span class="fu">dir_info</span>(path, <span class="at">recurse =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(type <span class="sc">==</span> <span class="st">"file"</span>) <span class="sc">%&gt;%</span></span>
@@ -367,7 +403,7 @@ month: int32</code></pre>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>cran_logs_parquet <span class="ot">&lt;-</span> <span class="fu">open_dataset</span>(<span class="st">"~/datasets/cran-logs-parquet/"</span>,  <span class="at">format =</span> <span class="st">"parquet"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We will compare how long it takes for Arrow to compute the 10 most downloaded packages in the time period our dataset covers using each file format.</p>
-<div class="cell" data-hash="cran-logs_cache/html/compare-perf-top-10-pkgs_71a065a7a67c512fef2abf27511c0645">
+<div class="cell" data-hash="2022-08-19-dataset-creation_cache/html/compare-perf-top-10-pkgs_1aeeab96a1b804008357ff236de271e1">
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>top_10_packages <span class="ot">&lt;-</span> <span class="cf">function</span>(data) {</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  data <span class="sc">%&gt;%</span></span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">count</span>(package, <span class="at">sort =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
@@ -389,32 +425,30 @@ month: int32</code></pre>
 <pre><code># A tibble: 3 × 6
   expression                              min   median `itr/sec` mem_a…¹ gc/se…²
   &lt;bch:expr&gt;                         &lt;bch:tm&gt; &lt;bch:tm&gt;     &lt;dbl&gt; &lt;bch:b&gt;   &lt;dbl&gt;
-1 top_10_packages(cran_logs_csv)       32.02s   32.02s    0.0312   8.2MB   0    
-2 top_10_packages(cran_logs_arrow)      4.03s    4.03s    0.248  165.4KB   0    
-3 top_10_packages(cran_logs_parquet)    3.97s    3.97s    0.252  137.1KB   0.252
+1 top_10_packages(cran_logs_csv)        29.6s    29.6s    0.0338   8.2MB   0    
+2 top_10_packages(cran_logs_arrow)      2.42s    2.42s    0.414  165.4KB   0    
+3 top_10_packages(cran_logs_parquet)     3.4s     3.4s    0.294  137.1KB   0.294
 # … with abbreviated variable names ¹​mem_alloc, ²​`gc/sec`</code></pre>
 </div>
 </div>
-<p>While it takes about 4 seconds to perform this task on the Arrow or Parquet files, it takes more than 35 seconds to do it on the CSV files.</p>
+<p>While it takes about 4 seconds to perform this task on the Arrow or Parquet files, it takes more than 30 seconds to do it on the CSV files.</p>
 </section>
 <section id="conclusion" class="level2">
 <h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
-<p>Having Arrow point directly to the folder of compressed CSV file might be the most convenient but it comes with a high performance cost. Arrow and Parquet have similar performance but the Parquet files take less space on disk and would be more suitable for long-term storage.</p>
+<p>Having Arrow point directly to the folder of compressed CSV file might be the most convenient but it comes with a high-performance cost. Arrow and Parquet have similar performance but the Parquet files take less space on disk and would be more suitable for long-term storage. This is why large datasets like the NYC taxi data is distributed as a series of Parquet files.</p>
+<p>In the future, I might explore how using different variables for partitioning or how the number of files in the partitions affects the performance of the queries.</p>
 </section>
-<section id="session-info" class="level2">
-<h2 class="anchored" data-anchor-id="session-info">Session Info</h2>
-<div class="callout-tip callout callout-style-default callout-captioned">
-<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-caption-container flex-fill">
+<section id="going-further" class="level2">
+<h2 class="anchored" data-anchor-id="going-further">Going further</h2>
+<p>If you would like to learn more about the different formats, check out the <a href="https://arrow-user2022.netlify.app/">Arrow workshop</a> (especially <a href="https://arrow-user2022.netlify.app/data-storage.html">Part 3: Data Storage</a>) that Danielle Navarro, Jonathan Keane, and Stephanie Hazlitt taught at useR!2022.</p>
+</section>
+<section id="acknowledgments" class="level2">
+<h2 class="anchored" data-anchor-id="acknowledgments">Acknowledgments</h2>
+<p>Thank you to <a href="https://twitter.com/kae_suarez/">Kae Suarez</a> for reviewing this post.</p>
+<details>
+<summary>
 Expand for Session Info
-</div>
-<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
-</div>
-<div id="callout-1" class="callout-1-contents callout-collapse collapse">
-<div class="callout-body-container callout-body">
+</summary>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>sessioninfo<span class="sc">::</span><span class="fu">session_info</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -428,7 +462,7 @@ Expand for Session Info
  collate  en_US.UTF-8
  ctype    en_US.UTF-8
  tz       Europe/Paris
- date     2022-08-18
+ date     2022-08-19
  pandoc   NA (via rmarkdown)
 
 ─ Packages ───────────────────────────────────────────────────────────────────
@@ -504,9 +538,7 @@ Expand for Session Info
 ──────────────────────────────────────────────────────────────────────────────</code></pre>
 </div>
 </div>
-</div>
-</div>
-</div>
+</details>
 </section>
 
 
